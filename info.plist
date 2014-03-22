@@ -19,6 +19,17 @@
 				<string></string>
 			</dict>
 		</array>
+		<key>65736B63-43AA-4D9B-B6C4-7E615A27E410</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>182ABB39-DD4F-4BD7-AB62-4E30F65E44E0</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+			</dict>
+		</array>
 		<key>8D8F844A-56CC-4762-B5AF-BDFE53D832B6</key>
 		<array>
 			<dict>
@@ -30,11 +41,44 @@
 				<string></string>
 			</dict>
 		</array>
+		<key>8DA8D721-DE4F-4AF9-8418-C44BC2EF4E2C</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>FF06EC64-5332-42E5-B391-71A4AED482E4</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+			</dict>
+		</array>
 		<key>91DA5BF8-64D3-4A25-B331-5D540E5742FD</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
 				<string>ECC09F9D-F5AF-4752-8F30-53CAEE7BEC4A</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+			</dict>
+		</array>
+		<key>A4C89178-FF0B-46E4-948A-BDD1E4C2A09C</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>182ABB39-DD4F-4BD7-AB62-4E30F65E44E0</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+			</dict>
+		</array>
+		<key>A54BEF3A-4C67-4F64-9299-53235414FC3F</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>9390085F-3F41-4922-AC8B-1DE5A6DB2B1F</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -56,13 +100,110 @@
 	<key>createdby</key>
 	<string>Stephen Margheim</string>
 	<key>description</key>
-	<string>Actions for PDF viewer Skim (v. 1.3)</string>
+	<string>Actions for PDF viewer Skim (v. 1.4)</string>
 	<key>disabled</key>
 	<false/>
 	<key>name</key>
 	<string>Skimmer</string>
 	<key>objects</key>
 	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>python _magic-args.py "{query}"</string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>9390085F-3F41-4922-AC8B-1DE5A6DB2B1F</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>2</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>sk:bug</string>
+				<key>script</key>
+				<string>python filter_debug.py</string>
+				<key>title</key>
+				<string>Debugging Help</string>
+				<key>type</key>
+				<integer>0</integer>
+				<key>withspace</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>A54BEF3A-4C67-4F64-9299-53235414FC3F</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>2</integer>
+				<key>keyword</key>
+				<string>sk:set</string>
+				<key>subtext</key>
+				<string>Set Export Style and Destination</string>
+				<key>text</key>
+				<string>Skimmer Export Settings</string>
+				<key>withspace</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.keyword</string>
+			<key>uid</key>
+			<string>8DA8D721-DE4F-4AF9-8418-C44BC2EF4E2C</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>escaping</key>
+				<integer>127</integer>
+				<key>script</key>
+				<string>osascript _config.scpt</string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>FF06EC64-5332-42E5-B391-71A4AED482E4</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>osascript action_pdf-splitter.scpt</string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>D7060C10-18CB-47C1-8EC2-748B2C413EBD</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
 		<dict>
 			<key>config</key>
 			<dict>
@@ -91,23 +232,6 @@
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>escaping</key>
-				<integer>102</integer>
-				<key>script</key>
-				<string>osascript splitter.scpt</string>
-				<key>type</key>
-				<integer>0</integer>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.script</string>
-			<key>uid</key>
-			<string>D7060C10-18CB-47C1-8EC2-748B2C413EBD</string>
-			<key>version</key>
-			<integer>0</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
 				<key>argumenttype</key>
 				<integer>2</integer>
 				<key>keyword</key>
@@ -130,7 +254,7 @@
 				<key>escaping</key>
 				<integer>127</integer>
 				<key>script</key>
-				<string>osascript search_gscholar.scpt</string>
+				<string>osascript action_search-gscholar.scpt</string>
 				<key>type</key>
 				<integer>0</integer>
 			</dict>
@@ -185,40 +309,150 @@
 			<key>version</key>
 			<integer>0</integer>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>sk</string>
+				<key>runningsubtext</key>
+				<string>Skimmer is searching...</string>
+				<key>script</key>
+				<string>python filter_pdf-query.py "{query}"</string>
+				<key>subtext</key>
+				<string>Search for PDFs</string>
+				<key>title</key>
+				<string>PDF Query</string>
+				<key>type</key>
+				<integer>0</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>A4C89178-FF0B-46E4-948A-BDD1E4C2A09C</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>escaping</key>
+				<integer>127</integer>
+				<key>script</key>
+				<string>open -a Skim {query}</string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>182ABB39-DD4F-4BD7-AB62-4E30F65E44E0</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>keyword</key>
+				<string>skimmer</string>
+				<key>runningsubtext</key>
+				<string>Skimmer is searching...</string>
+				<key>script</key>
+				<string>python filter_pdf-query.py "{query}"</string>
+				<key>subtext</key>
+				<string>Search for PDFs</string>
+				<key>title</key>
+				<string>PDF Query</string>
+				<key>type</key>
+				<integer>0</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>65736B63-43AA-4D9B-B6C4-7E615A27E410</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
 	</array>
 	<key>readme</key>
 	<string></string>
 	<key>uidata</key>
 	<dict>
+		<key>182ABB39-DD4F-4BD7-AB62-4E30F65E44E0</key>
+		<dict>
+			<key>ypos</key>
+			<real>560</real>
+		</dict>
 		<key>5E32964E-ECEE-4E09-B145-FAE648D9B645</key>
 		<dict>
 			<key>ypos</key>
-			<real>10</real>
+			<real>230</real>
+		</dict>
+		<key>65736B63-43AA-4D9B-B6C4-7E615A27E410</key>
+		<dict>
+			<key>ypos</key>
+			<real>610</real>
 		</dict>
 		<key>8D8F844A-56CC-4762-B5AF-BDFE53D832B6</key>
 		<dict>
 			<key>ypos</key>
-			<real>70</real>
+			<real>280</real>
+		</dict>
+		<key>8DA8D721-DE4F-4AF9-8418-C44BC2EF4E2C</key>
+		<dict>
+			<key>ypos</key>
+			<real>110</real>
 		</dict>
 		<key>91DA5BF8-64D3-4A25-B331-5D540E5742FD</key>
 		<dict>
 			<key>ypos</key>
-			<real>130</real>
+			<real>330</real>
 		</dict>
-		<key>D7060C10-18CB-47C1-8EC2-748B2C413EBD</key>
+		<key>9390085F-3F41-4922-AC8B-1DE5A6DB2B1F</key>
 		<dict>
 			<key>ypos</key>
 			<real>10</real>
 		</dict>
+		<key>A4C89178-FF0B-46E4-948A-BDD1E4C2A09C</key>
+		<dict>
+			<key>ypos</key>
+			<real>510</real>
+		</dict>
+		<key>A54BEF3A-4C67-4F64-9299-53235414FC3F</key>
+		<dict>
+			<key>ypos</key>
+			<real>10</real>
+		</dict>
+		<key>D7060C10-18CB-47C1-8EC2-748B2C413EBD</key>
+		<dict>
+			<key>ypos</key>
+			<real>230</real>
+		</dict>
 		<key>D79E9FCE-ED22-4DF9-B0DE-A9C77509606E</key>
 		<dict>
 			<key>ypos</key>
-			<real>190</real>
+			<real>380</real>
 		</dict>
 		<key>ECC09F9D-F5AF-4752-8F30-53CAEE7BEC4A</key>
 		<dict>
 			<key>ypos</key>
-			<real>130</real>
+			<real>330</real>
+		</dict>
+		<key>FF06EC64-5332-42E5-B391-71A4AED482E4</key>
+		<dict>
+			<key>ypos</key>
+			<real>110</real>
 		</dict>
 	</dict>
 	<key>webaddress</key>
