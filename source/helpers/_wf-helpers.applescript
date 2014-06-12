@@ -6,7 +6,7 @@ Along with some custom code for dealing with simple JSON settings files (no nest
 
 on get_path()
 	set {tid, AppleScript's text item delimiters} to {AppleScript's text item delimiters, "/"}
-	set _path to (text items 1 thru -2 of (POSIX path of (path to me)) as string) & "/"
+	set _path to (text items 1 thru -3 of (POSIX path of (path to me)) as string) & "/"
 	set AppleScript's text item delimiters to tid
 	
 	if my q_is_empty(_path) then return missing value
@@ -41,7 +41,6 @@ on init_paths()
 	# initialize the Cache and Data folders
 	set _cache to (_home) & "Library/Caches/com.runningwithcrayons.Alfred-2/Workflow Data/" & (_bundle) & "/"
 	set _storage to (_home) & "Library/Application Support/Alfred 2/Workflow Data/" & (_bundle) & "/"
-	set _temp to _cache & "temp/"
 	
 	# create the Cache and Data folders if they don't exist
 	if not my q_folder_exists(_cache) then
@@ -49,9 +48,6 @@ on init_paths()
 	end if
 	if not my q_folder_exists(_storage) then
 		do shell script "mkdir " & (quoted form of _storage)
-	end if
-	if not my q_folder_exists(_temp) then
-		do shell script "mkdir " & (quoted form of _temp)
 	end if
 	return true
 end init_paths
@@ -99,67 +95,82 @@ end mdfind
 
 (* JSON *)
 
-on make_json(obj)
-	set str to my as_string(obj)
-	try
-		set jsonHelper to my get_path() & "bin/q_json.helper"
-		set scpt to "tell application \"" & jsonHelper & "\" to make JSON from " & str
-		set scpt to run script scpt
-		if scpt = "" then
-			return missing value
-		else
-			return scpt
-		end if
-	on error msg
-		return missing value
-	end try
-end make_json
-
-on read_json(str)
-	try
-		set jsonHelper to my get_path() & "bin/q_json.helper"
-		set scpt to "tell application \"" & jsonHelper & "\" to read JSON from \"" & str & "\""
-		set scpt to run script scpt
-		if scpt = "" then
-			return missing value
-		else
-			return scpt
-		end if
-	on error msg
-		return msg
-	end try
+on read_json(json_, path_)
+	if path_ = true then
+		set the file_ to open for access file json_
+		set json_ to (read file_)
+		close access file_
+	end if
+	
+	-- simplify JSON
+	set {astid, AppleScript's text item delimiters} to {AppleScript's text item delimiters, {return & linefeed, return, linefeed, tab, character id 8233, character id 8232, ":", "\"", ",", "{", "}"}}
+	set json_l to text items of json_
+	set AppleScript's text item delimiters to astid
+	
+	-- remove empty items
+	set itemsToDelete to {"", " ", "    ", "  ", " ", "        ", "      ", "   "}
+	set cleanList to {}
+	repeat with i from 1 to count json_l
+		if {json_l's item i} is not in itemsToDelete then set cleanList's end to json_l's item i
+	end repeat
+	
+	-- JSON keys to AS record
+	set rec to my list2record(cleanList, "string")
+	return rec
 end read_json
 
+on list2record(_list, val_type)
+	set split_list to my deinterlaceList(_list)
+	set _keys to item 1 of split_list
+	set _vals to item 2 of split_list
+	
+	if (count _keys) = (count _vals) then
+		set rec to {}
+		repeat with i from 1 to count of _keys
+			set _key to item i of _keys
+			set _val to item i of _vals
+			
+			if val_type = "string" or "text" then
+				set r to "set rec to {_" & _key & ":\"" & _val & "\"}"
+			else if val_type = "integer" or "number" then
+				set r to "set rec to {_" & _key & ":" & _val & "}"
+			end if
+			set r to run script r
+			set rec to rec & r
+		end repeat
+		return rec
+	end if
+end list2record
 
------
-
-on as_string(my_records)
+on write_json(k_v, path_)
+	set json to ""
+	repeat with i from 1 to count k_v
+		set kv to (item i of k_v)
+		if i = 1 then
+			set l to "{" & return & tab & "\"" & (item 1 of kv) & "\": \"" & (item 2 of kv) & "\","
+			set json to json & l
+		else if i > 1 and i < (count k_v) then
+			set l to return & tab & "\"" & (item 1 of kv) & "\": \"" & (item 2 of kv) & "\","
+			set json to json & l
+		else if i = (count k_v) then
+			set l to return & tab & "\"" & (item 1 of kv) & "\": \"" & (item 2 of kv) & "\"" & return & "}"
+			set json to json & l
+		end if
+	end repeat
+	
+	---Write the data to the settings file
 	try
-		my_records as class
-	on error error_message
+		set the file_ to open for access file path_ with write permission
+		set eof of file_ to 0
+		write json to file_
+		close access the file_
+		return true
+	on error
+		return false
 	end try
-	set record_text to my replace(error_message, "Can’t make ", "")
-	set record_text to my replace(record_text, " into type class.", "")
-	return record_text
-end as_string
+end write_json
 
-on replace(theText, oldString, newString)
-	local ASTID, theText, oldString, newString, lst
-	set ASTID to AppleScript's text item delimiters
-	try
-		considering case
-			set AppleScript's text item delimiters to oldString
-			set lst to every text item of theText
-			set AppleScript's text item delimiters to newString
-			set theText to lst as string
-		end considering
-		set AppleScript's text item delimiters to ASTID
-		return theText
-	on error eMsg number eNum
-		set AppleScript's text item delimiters to ASTID
-		error "Can't replace: " & eMsg number eNum
-	end try
-end replace
+
 
 (* HANDLERS *)
 

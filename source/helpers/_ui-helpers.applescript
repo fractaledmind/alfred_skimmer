@@ -208,6 +208,8 @@ on choose_file(rec)
 				run script def_
 				set scpt to scpt & space & "default location " & (def_)
 			end try
+		else if (z_def of rec) is "" then
+			
 		else
 			set def_ to (z_def of rec)
 			try
@@ -242,7 +244,11 @@ on choose_file(rec)
 			return POSIX path of res
 		end if
 	on error
-		return POSIX path of res
+		try
+			return POSIX path of res
+		on error
+			return res
+		end try
 	end try
 end choose_file
 
@@ -316,6 +322,8 @@ on choose_folder(rec)
 				run script def_
 				set scpt to scpt & space & "default location " & (def_)
 			end try
+		else if (z_def of rec) is "" then
+			
 		else
 			set def_ to (z_def of rec)
 			try
@@ -350,7 +358,11 @@ on choose_folder(rec)
 			return POSIX path of res
 		end if
 	on error
-		return POSIX path of res
+		try
+			return POSIX path of res
+		on error
+			return res
+		end try
 	end try
 end choose_folder
 
