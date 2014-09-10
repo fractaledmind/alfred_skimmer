@@ -4,66 +4,28 @@ PROPERTIES
 
 --Formatting
 (* DO NOT CHANGE *)
-property line_feed : (ASCII character 10)
-property md_line_feed : (ASCII character 32) & (ASCII character 32) & (ASCII character 10)
+property line_break : {html:"<br></br>", md:(ASCII character 10) & (ASCII character 10)}
 property as_delims : AppleScript's text item delimiters
 
 --Evernote
 (* CHANGE NAME OF EVERNOTE NOTEBOOK AND/OR TAG WHERE NOTES WILL RESIDE *)
---If you don't want to tag the notes, set `en_tag` to ""
 property en_notebook : "PDF Notes"
+--If you don't want to tag the notes, set `en_tag` to ""
 property en_tag : "pdf_notes"
+--If you don't want highlights grouped and sorted (but rather in timestamp order), set `highlights_sorted ` to false
+property highlights_sorted : true
 
---Deprecated
-property export_style : "HTML"
-property export_destination : "Evernote"
+(* EXPORT OPTIONS *)
+property export_style : item 1 of {"HTML", "Markdown"}
+property export_destination : item 1 of {"Evernote", "Clipboard"}
 
 (* CHANGE FOR FORMATTING OF VARIOUS NOTE KINDS *)
--- See the `get_annotation_hyperlink` handler for more formatting information
-
---Text Note HTML
-property text_prefix : "<p>"
-property text_body_wrap_front : ""
-property text_body_wrap_back : ""
-property text_page_wrap_front : " (<a href=\""
-property text_page_abbr : "\">p."
-property text_page_wrap_back : "</a>)"
-
---Anchor Note HTML
-property anchored_prefix : "<p>"
-property anchored_title_wrap_front : "<strong>"
-property anchored_title_wrap_back : "</strong>"
-property anchored_body_wrap_front : ""
-property anchored_body_wrap_back : ""
-property anchored_page_wrap_front : "(<a href=\""
-property anchored_page_abbr : "\">p."
-property anchored_page_wrap_back : "</a>)"
-
---Underline Note HTML
-property underline_prefix : "<p>"
-property underline_body_wrap_front : "\""
-property underline_body_wrap_back : "\""
-property underline_page_wrap_front : "(<a href=\""
-property underline_page_abbr : "\">p."
-property underline_page_wrap_back : "</a>)"
-
---Strike-Thru Note HTML
-property strike_prefix : "<p>"
-property strike_body_wrap_front : "\""
-property strike_body_wrap_back : "\""
-property strike_page_wrap_front : "(<a href=\""
-property strike_page_abbr : "\">p."
-property strike_page_wrap_back : "</a>)"
-
---Highlight Note HTML
-property highlight_prefix : "<p>"
-property highlight_title_wrap_front : "<strong>"
-property highlight_title_wrap_back : ":</strong>"
-property highlight_body_wrap_front : ""
-property highlight_body_wrap_back : ""
-property highlight_page_wrap_front : "(<a href=\""
-property highlight_page_abbr : "\">p."
-property highlight_page_wrap_back : "</a>)"
+property prefix : {{annotation:"text note", formatting:{html:"<p>", md:""}}, {annotation:"anchored note", formatting:{html:"<p>", md:""}}, {annotation:"underline note", formatting:{html:"<p>", md:""}}, {annotation:"strike out note", formatting:{html:"<p>", md:""}}, {annotation:"highlight note", formatting:{html:"<p>", md:""}}}
+property title_front : {{annotation:"text note", formatting:missing value}, {annotation:"anchored note", formatting:{html:"<strong>", md:"**"}}, {annotation:"underline note", formatting:missing value}, {annotation:"strike out note", formatting:missing value}, {annotation:"highlight note", formatting:{html:"<strong>", md:"**"}}}
+property title_back : {{annotation:"text note", formatting:missing value}, {annotation:"anchored note", formatting:{html:":</strong>", md:":**"}}, {annotation:"underline note", formatting:missing value}, {annotation:"strike out note", formatting:missing value}, {annotation:"highlight note", formatting:{html:":</strong>", md:":**"}}}
+property body_front : {{annotation:"text note", formatting:{html:"", md:""}}, {annotation:"anchored note", formatting:{html:"", md:""}}, {annotation:"underline note", formatting:{html:"\"", md:"\""}}, {annotation:"strike out note", formatting:{html:"\"", md:"\""}}, {annotation:"highlight note", formatting:{html:"", md:""}}}
+property body_back : {{annotation:"text note", formatting:{html:"", md:""}}, {annotation:"anchored note", formatting:{html:"", md:""}}, {annotation:"underline note", formatting:{html:"\"", md:"\""}}, {annotation:"strike out note", formatting:{html:"\"", md:"\""}}, {annotation:"highlight note", formatting:{html:"", md:""}}}
+property suffix : {{annotation:"text note", formatting:{html:"</p>", md:""}}, {annotation:"anchored note", formatting:{html:"</p>", md:""}}, {annotation:"underline note", formatting:{html:"</p>", md:""}}, {annotation:"strike out note", formatting:{html:"</p>", md:""}}, {annotation:"highlight note", formatting:{html:"</p>", md:""}}}
 
 on run
 	(* ///
@@ -78,9 +40,9 @@ on run
 		set wf to load script (base_path & "_wf-helpers.scpt")
 		
 		--Get user's export Preferences
-		--set rec to my get_settings(wf)
-		--set export_style to rec's |style|
-		--set export_destination to rec's destination
+		set rec to my get_settings(wf)
+		set export_style to rec's |style|
+		set export_destination to rec's destination
 		
 		--Get user's Highlight Preferences
 		set annotations_path to wf's get_storage() & "annotations_config.json"
@@ -91,8 +53,6 @@ on run
 		--If user hasn't configured, set defaults		
 		set highlight_rec to {{_title:"Summary", _color:{65535, 65531, 2689, 65535}}, {_title:"Disagree", _color:{64634, 467, 1798, 65535}}, {_title:"Agree", _color:{64907, 32785, 2154, 65535}}, {_title:"Reference", _color:{8608, 65514, 1548, 65535}}, {_title:"Quotable", _color:{8372, 65519, 65472, 65535}}, {_title:"Technique", _color:{64587, 609, 65481, 65535}}}
 	end try
-	
-	
 	
 	(* ///
 	THE SCRIPT 
@@ -128,18 +88,28 @@ on run
 		PART 2: Get all necessary Information 
 		/// *)
 		
+		--Set proper line break type
+		if export_style = "HTML" then
+			set line_break to html of line_break
+		else if export_style = "Markdown" then
+			set line_break to md of line_break
+		end if
+		
+		--Get key PDF information
 		set pdf_name to (name of front document)
 		set _file to (path of front document)
 		set file_url to my encode_text(_file, false, false)
 		set skimmer_url to "skimmer://" & file_url & "?page="
 		set all_notes to every note of front document
 		
+		--Prepare all annotation lists
 		set notes_text to my get_header(export_style, "The ToC")
 		set notes_anchor to my get_header(export_style, "All of my Text Notes")
 		set notes_underline to my get_header(export_style, "All of the Underlined Text")
 		set notes_strikethru to my get_header(export_style, "All of the Strike-Through Text")
 		set notes_highlight to my get_header(export_style, "All of the Highlighted Text")
 		
+		--Prepare existence checks
 		set {_text_, _anchor_, _underline_, _strikethru_, _highlight_} to {false, false, false, false, false}
 		
 		(* ///
@@ -147,45 +117,53 @@ on run
 		/// *)
 		
 		repeat with i from 1 to count of all_notes
-			set _note to item i of all_notes
+			set _note to (item i of all_notes)
 			set _page to index of page of _note
 			set real_page to (_page + page_relation) as string
 			set this_url to skimmer_url & _page
 			
 			if type of _note is text note then
 				set note_text to text of _note
-				set notes_text to notes_text & (my get_annotation_hyperlink((type of _note), "", note_text, this_url, real_page))
+				copy (my get_annotation((type of _note) as string, "", note_text, this_url, real_page)) to end of notes_text
 				set _text_ to true
 				
 			else if type of _note is anchored note then
 				set title_text to text of _note
 				set note_text to extended text of _note
-				set notes_anchor to notes_anchor & (my get_annotation_hyperlink((type of _note), title_text, note_text, this_url, real_page))
-				
+				copy (my get_annotation((type of _note) as string, title_text, note_text, this_url, real_page)) to end of notes_anchor
 				set _anchor_ to true
 				
 			else if type of _note is underline note then
 				set note_text to text of _note
-				set notes_underline to notes_underline & (my get_annotation_hyperlink((type of _note), "", note_text, this_url, real_page))
+				copy (my get_annotation((type of _note) as string, "", note_text, this_url, real_page)) to end of notes_underline
 				set _underline_ to true
 				
 			else if type of _note is strike out note then
 				set note_text to text of _note
-				set notes_strikethru to notes_strikethru & (my get_annotation_hyperlink((type of _note), "", note_text, this_url, real_page))
+				copy (my get_annotation((type of _note) as string, "", note_text, this_url, real_page)) to end of notes_strikethru
 				set _strikethru_ to true
 				
 			else if type of _note is highlight note then
 				set note_text to text of _note
-				set rgba to color of _note
-				set title_text to my color2text(highlight_rec, rgba)
-				set notes_highlight to notes_highlight & (my get_annotation_hyperlink((type of _note), title_text, note_text, this_url, real_page))
+				set title_text to my color2text(highlight_rec, color of _note)
+				copy (my get_annotation((type of _note) as string, title_text, note_text, this_url, real_page)) to end of notes_highlight
 				set _highlight_ to true
-				
 			end if
 		end repeat
 		
 		(* ///
-		PART 4: Remove any Empty Annotation Sections
+		PART 4: Sort the Highlighted Text
+		/// *)
+		
+		if highlights_sorted = true then
+			set notes_highlight to my _sortlist(notes_highlight)
+			set AppleScript's text item delimiters to line_break
+			set notes_highlight to (notes_highlight as string)
+			set AppleScript's text item delimiters to as_delims
+		end if
+		
+		(* ///
+		PART 5: Concatenate all Existing Annotation Sections
 		/// *)
 		
 		set final_text to ""
@@ -196,7 +174,7 @@ on run
 		if _highlight_ = true then set final_text to final_text & notes_highlight
 		
 		(* ///
-		PART 5: Export the Notes
+		PART 6: Export the Notes
 		/// *)
 		
 		if export_destination = "Evernote" then
@@ -259,7 +237,7 @@ end get_base_path
 
 on get_settings(wf)
 	set _bundle to wf's get_bundle()
-	set settings_path to (path to "cusr" as text) & "Library:Application Support:Aline_feedred 2:Workflow Data:" & _bundle & ":settings.json" as text
+	set settings_path to (path to "cusr" as text) & "Library:Application Support:Alfred 2:Workflow Data:" & _bundle & ":settings.json" as text
 	set the file_ to open for access file settings_path
 	set json_ to (read file_)
 	close access file_
@@ -270,61 +248,105 @@ end get_settings
 
 on get_header(_style, _header)
 	if _style = "HTML" then
-		return "<hr />" & line_feed & line_feed & "<h2>" & _header & "</h2>" & md_line_feed & line_feed & line_feed
+		return {"<hr />" & line_break & "<h2>" & _header & "</h2>" & line_break}
 	else if _style = "Markdown" then
-		return "- - -" & line_feed & line_feed & "## " & _header & " ##" & md_line_feed & line_feed & line_feed
+		return {"- - -" & line_break & "## " & _header & " ##" & line_break}
 	end if
 end get_header
 
-on get_annotation_hyperlink(_type, _title, note_text, hyperlink, real_page)
-	(* 
-	For the formulae below, properties are wrapped in {curlies} and passed parameters are wrapped in <carets>. Also, note where the spaces are.
-	*)
-	tell application "Skim"
-		if _type = text note then
-			--{prefix}{wrap}<note text>{/wrap}{wrap}<link>{p.} <#>{/wrap}
-			set body to (text_prefix & text_body_wrap_front & note_text & text_body_wrap_back)
-			set page_front to (text_page_wrap_front & hyperlink & text_page_abbr)
-			set page_back to (real_page & text_page_wrap_back)
-			
-			return body & space & page_front & space & page_back & line_feed & line_feed
-			
-		else if _type = anchored note then
-			--{prefix}{wrap}<title>{/wrap} {wrap}<note text>{/wrap} {wrap}<link>{p.} <#>{/wrap}
-			set anchor to (anchored_prefix & anchored_title_wrap_front & _title & anchored_title_wrap_back)
-			set body to (anchored_body_wrap_front & note_text & anchored_body_wrap_back)
-			set page_front to (anchored_page_wrap_front & hyperlink & anchored_page_abbr)
-			set page_back to (real_page & anchored_page_wrap_back)
-			
-			return anchor & space & body & space & page_front & space & page_back & line_feed & line_feed
-			
-		else if _type = underline note then
-			--{prefix}{wrap}<note text>{/wrap} {wrap}<link>{p.} <#>{/wrap}
-			set body to (underline_prefix & underline_body_wrap_front & note_text & underline_body_wrap_back)
-			set page_front to (underline_page_wrap_front & hyperlink & underline_page_abbr)
-			set page_back to (real_page & underline_page_wrap_back)
-			
-			return body & space & page_front & space & page_back & line_feed & line_feed
-			
-		else if _type = strike out note then
-			--{prefix}{wrap}<note text>{/wrap} {wrap}<link>{p.} <#>{/wrap}
-			set body to (strike_prefix & strike_body_wrap_front & note_text & strike_body_wrap_back)
-			set page_front to (strike_page_wrap_front & hyperlink & strike_page_abbr)
-			set page_back to (real_page & strike_page_wrap_back)
-			
-			return body & space & page_front & space & page_back & line_feed & line_feed
-			
-		else if _type = highlight note then
-			--{prefix}{wrap}<title>{/wrap} {wrap}<note text>{/wrap} {wrap}<link>{p.} <#>{/wrap}
-			set header to (highlight_prefix & highlight_title_wrap_front & _title & highlight_title_wrap_back)
-			set body to (highlight_body_wrap_front & note_text & highlight_body_wrap_back)
-			set page_front to (highlight_page_wrap_front & hyperlink & highlight_page_abbr)
-			set page_back to (real_page & highlight_page_wrap_back)
-			
-			return header & space & body & space & page_front & space & page_back & line_feed & line_feed
+on get_sub_header(_style, _header)
+	if _style = "HTML" then
+		return line_break & "<h4>" & _header & "</h4>" & line_break
+	else if _style = "Markdown" then
+		return line_break & "#### " & _header & " ####" & line_break
+	end if
+end get_sub_header
+
+on get_annotation(_type, _title, note_text, hyperlink, real_page)
+	set _prefix to my get_prefix(_type, _title)
+	set _body to my get_body(_type, note_text)
+	set _link to my get_link(_type, real_page, hyperlink)
+	set _suffix to my get_property_formatting(suffix, _type)
+	return _prefix & space & _body & space & _link & _suffix
+end get_annotation
+
+on get_prefix(_type, _title)
+	set _prefix to my get_property_formatting(prefix, _type)
+	set _title_front to my get_property_formatting(title_front, _type)
+	set _title_back to my get_property_formatting(title_back, _type)
+	return _prefix & _title_front & _title & _title_back
+end get_prefix
+
+on get_body(_type, note_text)
+	--{wrap}<note text>{/wrap}
+	set _body_front to my get_property_formatting(body_front, _type)
+	set _body_back to my get_property_formatting(body_back, _type)
+	return _body_front & note_text & _body_back
+end get_body
+
+on get_link(_type, real_page, hyperlink)
+	set link_front to {formatting:{html:"(", md:"("}}
+	set link_back to {formatting:{html:")", md:")"}}
+	set _link_front to my get_property_formatting(link_front, _type)
+	set _link_back to my get_property_formatting(link_back, _type)
+	
+	set _page to my get_abbr(_type, real_page)
+	set _url to my get_url(_type, hyperlink)
+	
+	if export_style = "HTML" then
+		return _link_front & _url & _page & _link_back
+	else if export_style = "Markdown" then
+		return _link_front & _page & _url & _link_back
+	end if
+end get_link
+
+
+
+on get_url(_type, hyperlink)
+	set url_front to {formatting:{html:"<a href=\"", md:"("}}
+	set url_back to {formatting:{html:"\">", md:")"}}
+	set _url_front to my get_property_formatting(url_front, _type)
+	set _url_back to my get_property_formatting(url_back, _type)
+	return _url_front & hyperlink & _url_back
+end get_url
+
+on get_abbr(_type, real_page)
+	set abbr_front to {formatting:{html:"p. ", md:"[p. "}}
+	set abbr_back to {formatting:{html:"</a>", md:"]"}}
+	set _abbr_front to my get_property_formatting(abbr_front, _type)
+	set _abbr_back to my get_property_formatting(abbr_back, _type)
+	return _abbr_front & real_page & _abbr_back
+end get_abbr
+
+
+on get_property_formatting(_property, _type)
+	try
+		if export_style = "HTML" then
+			return html of formatting of _property
+		else if export_style = "Markdown" then
+			return md of formatting of _property
 		end if
-	end tell
-end get_annotation_hyperlink
+	on error
+		repeat with _item in _property
+			if annotation of _item = _type then
+				if export_style = "HTML" then
+					try
+						return html of formatting of _item
+					on error
+						return ""
+					end try
+				else if export_style = "Markdown" then
+					try
+						return md of formatting of _item
+					on error
+						return ""
+					end try
+				end if
+			end if
+		end repeat
+	end try
+	return ""
+end get_property_formatting
 
 --convert highlights into text values
 on color2text(rec, noteColor)
@@ -364,3 +386,49 @@ on encode_char(this_char)
 	set y to item ((ASCII_num mod 16) + 1) of the hex_list
 	return ("%" & x & y) as string
 end encode_char
+
+on _sortlist(theList)
+	-- a stack-based, non-recursive quicksort
+	local theList, s, l, a, b, c, j, r, v, i, tmp
+	try
+		if theList's class is not list then error "not a list." number -1704
+		if (count theList each number) > 0 and ¬
+			((count theList each string) > 0) then
+			error "can't sort a list containing both " & ¬
+				"number and text values." number -1704
+		end if
+		script k -- list access speed kludge
+			property lst : theList's items
+		end script
+		if k's lst's length < 2 then return k's lst
+		set s to {a:1, b:count k's lst, c:missing value} -- unsorted slices stack
+		repeat until s is missing value
+			set l to s's a
+			set r to s's b
+			set s to get s's c
+			set i to l
+			set j to r
+			set v to k's lst's item ((l + r) div 2)
+			repeat while (j > i)
+				repeat while (k's lst's item i < v)
+					set i to i + 1
+				end repeat
+				repeat while (k's lst's item j > v)
+					set j to j - 1
+				end repeat
+				if (i ≤ j) then
+					set tmp to k's lst's item i
+					set k's lst's item i to k's lst's item j
+					set k's lst's item j to tmp
+					set i to i + 1
+					set j to j - 1
+				end if
+			end repeat
+			if (l < j) then set s to {a:l, b:j, c:s}
+			if (r > i) then set s to {a:i, b:r, c:s}
+		end repeat
+		return k's lst
+	on error eMsg number eNum
+		error "Can't sortList: " & eMsg number eNum
+	end try
+end _sortlist

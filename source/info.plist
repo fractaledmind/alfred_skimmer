@@ -4,8 +4,6 @@
 <dict>
 	<key>bundleid</key>
 	<string>com.hackademic.skimmer</string>
-	<key>category</key>
-	<string>Tools</string>
 	<key>connections</key>
 	<dict>
 		<key>36559DEF-C2F0-4906-9331-BB3B39FB7783</key>
@@ -166,7 +164,7 @@
 	<key>createdby</key>
 	<string>Stephen Margheim</string>
 	<key>description</key>
-	<string>Actions for PDF viewer Skim (v. 2.1)</string>
+	<string>Actions for PDF viewer Skim (v. 3)</string>
 	<key>disabled</key>
 	<false/>
 	<key>name</key>
@@ -204,7 +202,7 @@
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>python test.py "{query}"</string>
+				<string>python _magic-args.py "{query}"</string>
 				<key>type</key>
 				<integer>0</integer>
 			</dict>
@@ -228,8 +226,7 @@ from workflow import Workflow
 
 def main(wf):
 	if '{query}' == 'help':
-    		annotation = os.path.join(wf.workflowdir, 'skimmer_config_new.pdf')
-
+		annotation = wf.workflowfile('skimmer_config_new_embed.pdf')
     		if os.path.isfile(annotation):
         		subprocess.Popen(['open', annotation], stdout=subprocess.PIPE)
     		else:
@@ -240,6 +237,11 @@ def main(wf):
                                     stdout=subprocess.PIPE)
         	out = process.communicate()[0]
         	print out.strip()
+	elif '{query}' == 'handler':
+		handler = wf.workflowfile('_skimmer.app')
+		process = subprocess.Popen(['open', handler],
+                                    stdout=subprocess.PIPE)
+        	out = process.communicate()[0]
 
 if __name__ == '__main__':
     wf = Workflow()
@@ -273,6 +275,7 @@ from workflow import Workflow
 def main(wf):
 	wf.add_item(u"Open PDF", u"Open Skimmer's Help PDF?", valid=True, arg='help', icon='icons/n_pdf.png')
 	wf.add_item(u"Set Highlights", u"Set Highlight Settings", valid=True, arg='highlight', icon='icons/n_folder.png') 
+	wf.add_item(u"Configure Skimmer URL Handler", u"Open the URL handler app to register Skimmer's custom URL", valid=True, arg='handler', icon='icons/n_folder.png') 
 
 	wf.send_feedback()
 		
@@ -500,7 +503,8 @@ if __name__ == '__main__':
 				<key>escaping</key>
 				<integer>126</integer>
 				<key>script</key>
-				<string>osascript action_export-notes.scpt</string>
+				<string>#osascript action_export-notes.scpt
+osascript action_export_notes_chunked.scpt</string>
 				<key>type</key>
 				<integer>0</integer>
 			</dict>
